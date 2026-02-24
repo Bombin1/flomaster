@@ -39,25 +39,22 @@ body {
 }
 
 /* Логотип */
-.logo {
-  font-size: 60px;
-  font-weight: 600;
-  letter-spacing: 6px;
-  margin-bottom: 20px;
+.logo img {
+  width: 300px; /* або свій розмір */
+  height: auto;
   opacity: 0;
   transform: scale(0.7);
   animation: logoAppear 1.5s ease forwards;
-  text-shadow: 0 0 5px rgba(255,255,255,0.3);
+  filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));
 }
 
 @keyframes logoAppear {
   to {
     opacity: 1;
     transform: scale(1);
-    text-shadow: 0 0 20px rgba(255,255,255,0.6);
+    filter: drop-shadow(0 0 20px rgba(255,255,255,0.6));
   }
 }
-
 /* Tagline */
 .tagline {
   font-weight: 300;
@@ -120,7 +117,9 @@ body {
 <body>
 
 <div class="container">
-  <div class="logo">DMTR</div>
+  <div class="logo">
+  <img src="flomaster.svg" alt="FLOMASTER Logo">
+</div>
   <div class="tagline">
     Ти щойно відкрив доступ до дизайнера.
   </div>
