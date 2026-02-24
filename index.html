@@ -11,35 +11,70 @@
 * { margin:0; padding:0; box-sizing:border-box; }
 
 body {
+  font-family: 'Inter', sans-serif;
   background: radial-gradient(circle at 50% 30%, #111 0%, #000 60%);
-  animation: bgPulse 5s ease-in-out infinite alternate;
+  animation: bgPulse 8s ease-in-out infinite alternate;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  color: white;
 }
 
 @keyframes bgPulse {
-  from { background-position: 0% 0%; }
-  to { background-position: 100% 100%; }
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
 }
 
 .container {
   text-align: center;
-  animation: fadeIn 1.5s ease forwards;
   opacity: 0;
+  animation: fadeInContainer 1.5s ease forwards;
 }
 
+@keyframes fadeInContainer {
+  to { opacity: 1; }
+}
+
+/* Логотип */
 .logo {
-  font-size: 48px;
+  font-size: 60px;
   font-weight: 600;
   letter-spacing: 6px;
   margin-bottom: 20px;
+  opacity: 0;
+  transform: scale(0.7);
+  animation: logoAppear 1.5s ease forwards;
+  text-shadow: 0 0 5px rgba(255,255,255,0.3);
 }
 
+@keyframes logoAppear {
+  to {
+    opacity: 1;
+    transform: scale(1);
+    text-shadow: 0 0 20px rgba(255,255,255,0.6);
+  }
+}
+
+/* Tagline */
 .tagline {
   font-weight: 300;
   font-size: 16px;
-  opacity: 0.7;
+  opacity: 0;
   margin-bottom: 40px;
+  animation: taglineAppear 1.5s 1.2s ease forwards;
 }
 
+@keyframes taglineAppear {
+  to {
+    opacity: 0.8;
+    transform: translateY(0);
+  }
+}
+
+/* Кнопки */
 .buttons {
   display: flex;
   flex-direction: column;
@@ -51,19 +86,27 @@ body {
   border: 1px solid rgba(255,255,255,0.2);
   border-radius: 50px;
   background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
   color: white;
   text-decoration: none;
   font-size: 14px;
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
+  opacity: 0;
+  animation: buttonAppear 1s 1.8s ease forwards;
+}
+
+@keyframes buttonAppear {
+  to { opacity: 1; }
 }
 
 .button:hover {
-  background: white;
+  background: rgba(255,255,255,0.8);
   color: black;
-  transform: translateY(-2px);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 0 15px rgba(255,255,255,0.3);
 }
 
+/* Лічильник */
 .counter {
   position: absolute;
   bottom: 20px;
@@ -71,9 +114,6 @@ body {
   opacity: 0.4;
 }
 
-@keyframes fadeIn {
-  to { opacity: 1; }
-}
 </style>
 </head>
 
