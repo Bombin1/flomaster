@@ -57,17 +57,21 @@ body {
   }
 }
 /* Tagline */
+/* Залишаємо анімацію з .tagline */
 .tagline {
   font-weight: 300;               
   font-size: 16px;                
   opacity: 0;                      
   margin-bottom: 40px;            
   animation: taglineAppear 1.5s 1.2s ease forwards; 
+  font-family: inherit; /* важливо, щоб не перекривати Pacifico */
 }
- .pacifico-tagline {
+
+/* Клас для шрифту Pacifico тільки на цю надпис */
+.pacifico-tagline {
   font-family: "Pacifico", cursive;
-  font-size: 20px; /* можеш регулювати */
   font-weight: normal;
+  font-size: 20px; /* регулюй під свій дизайн */
 }
 
 @keyframes taglineAppear {
