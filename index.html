@@ -63,11 +63,13 @@ body {
   opacity: 0;                      
   margin-bottom: 40px;            
   animation: taglineAppear 1.5s 1.2s ease forwards; 
-  font-family: "Roboto", sans-serif;
-  font-optical-sizing: auto;
-  font-style: normal;
-  font-variation-settings: "wdth" 100;  /* можна регулювати ширину букв */
 }
+ .roboto-tagline {
+  font-family: "Roboto", sans-serif;
+  font-weight: 300;           /* тонкий шрифт */
+  font-style: normal;
+  font-variation-settings: "wdth" 100; /* ширина букв, можна регулювати */
+} 
 
 @keyframes taglineAppear {
   to {
