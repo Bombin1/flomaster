@@ -6,6 +6,7 @@
 <title>Access</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">  
 
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -57,11 +58,15 @@ body {
 }
 /* Tagline */
 .tagline {
-  font-weight: 300;
-  font-size: 16px;
-  opacity: 0;
-  margin-bottom: 40px;
-  animation: taglineAppear 1.5s 1.2s ease forwards;
+  font-weight: 300;               
+  font-size: 16px;                
+  opacity: 0;                      
+  margin-bottom: 40px;            
+  animation: taglineAppear 1.5s 1.2s ease forwards; 
+  font-family: "Roboto", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+  font-variation-settings: "wdth" 100;  /* можна регулювати ширину букв */
 }
 
 @keyframes taglineAppear {
@@ -120,8 +125,8 @@ body {
   <div class="logo">
   <img src="flomaster.svg" alt="FLOMASTER Logo">
 </div>
-  <div class="tagline">
-    Від ідеї до принта.
+  <div class="tagline roboto-tagline">
+  Від ідеї до принта.
   </div>
 
   <div class="buttons">
