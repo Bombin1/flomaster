@@ -137,15 +137,5 @@ body {
   </div>
 </div>
 
-<div class="counter" id="counter">Сканувань: ...</div>
-
-<script>
-let count = localStorage.getItem("scanCountLux");
-if (!count) count = 0;
-count++;
-localStorage.setItem("scanCountLux", count);
-document.getElementById("counter").innerText = "Сканувань: " + count;
-</script>
-
 </body>
 </html>
