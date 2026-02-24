@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Access</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;600&display=swap" rel="stylesheet">
+
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: radial-gradient(circle at 50% 30%, #111 0%, #000 60%);
+  color: white;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.container {
+  text-align: center;
+  animation: fadeIn 1.5s ease forwards;
+  opacity: 0;
+}
+
+.logo {
+  font-size: 48px;
+  font-weight: 600;
+  letter-spacing: 6px;
+  margin-bottom: 20px;
+}
+
+.tagline {
+  font-weight: 300;
+  font-size: 16px;
+  opacity: 0.7;
+  margin-bottom: 40px;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.button {
+  padding: 12px 28px;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 50px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
+  color: white;
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.button:hover {
+  background: white;
+  color: black;
+  transform: translateY(-2px);
+}
+
+.counter {
+  position: absolute;
+  bottom: 20px;
+  font-size: 12px;
+  opacity: 0.4;
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="logo">DMTR</div>
+  <div class="tagline">
+    Ти щойно відкрив доступ до дизайнера.
+  </div>
+
+  <div class="buttons">
+    <a class="button" href="https://yourportfolio.com">Портфоліо</a>
+    <a class="button" href="https://t.me/username">Telegram</a>
+    <a class="button" href="viber://add?number=380XXXXXXXXX">Viber</a>
+    <a class="button" href="contact.vcf">Зберегти контакт</a>
+  </div>
+</div>
+
+<div class="counter" id="counter">Сканувань: ...</div>
+
+<script>
+let count = localStorage.getItem("scanCountLux");
+if (!count) count = 0;
+count++;
+localStorage.setItem("scanCountLux", count);
+document.getElementById("counter").innerText = "Сканувань: " + count;
+</script>
+
+</body>
+</html>
