@@ -1,212 +1,250 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Access</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FLOMASTER | Digital Print Studio</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;600&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">  
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">  
 
-<style>
-/* Базові налаштування */
-* { margin:0; padding:0; box-sizing:border-box; }
+    <style>
+        /* Базові налаштування */
+        * { margin:0; padding:0; box-sizing:border-box; }
 
-body {
-  font-family: 'Inter', sans-serif;
-  background: #000;
-  height: 100vh;
-  width: 100vw;
-  color: white;
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #000;
+            height: 100vh;
+            width: 100vw;
+            color: white;
+            overflow: hidden;
+            position: fixed;
+            touch-action: none;
+            overscroll-behavior: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
 
-  /* --- ФІКСАЦІЯ ВІД "ДЬОРГАННЯ" --- */
-  overflow: hidden;         /* Ховаємо смуги прокрутки */
-  position: fixed;         /* Жорстко фіксуємо корпус сайту */
-  touch-action: none;      /* ПОВНІСТЮ вимикає стандартні жести браузера (скрол, зум) */
-  overscroll-behavior: none; /* Забороняє ефект "гумки" (відскоку) при краях */
-  user-select: none;       /* Забороняє випадкове виділення тексту при свайпах */
-  -webkit-user-select: none; /* Для браузерів на базі Safari/Chrome */
-}
+        /* Контейнер для сцени */
+        #scene-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            perspective: 1200px; /* Глибина тунелю */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-/* Контейнер для всіх шарів */
-#scene-container {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  perspective: 1000px;
-}
+        /* Загальний стиль для кожного шару (слайда) */
+        .layer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            /* Плавність переходу як на UNKLE */
+            transition: 
+                transform 1.2s cubic-bezier(0.22, 1, 0.36, 1), 
+                opacity 1s ease,
+                filter 1.2s ease;
+            pointer-events: none;
+            will-change: transform, opacity;
+            z-index: 1;
+        }
 
-/* Загальний стиль для кожного шару */
-.layer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
-              opacity 0.8s ease;
-  pointer-events: none; /* Щоб не заважали клікати, коли прозорі */
-  opacity: 0;
-  transform: scale(0.5); /* Початковий стан у глибині */
-}
+        /* Стан: Об'єкт у глибині (чекає своєї черги) */
+        .layer.incoming {
+            opacity: 0;
+            visibility: visible;
+            transform: translateZ(-1500px) scale(0.1);
+            filter: blur(10px);
+        }
 
-/* Активний шар */
-.layer.active {
-  opacity: 1;
-  transform: scale(1);
-  pointer-events: all;
-}
+        /* Стан: Об'єкт прямо перед очима (активний) */
+        .layer.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateZ(0px) scale(1);
+            filter: blur(0px);
+            pointer-events: all;
+            z-index: 10;
+        }
 
-/* Шар, що вже пройшов (збільшується і зникає) */
-.layer.exit {
-  opacity: 0;
-  transform: scale(2);
-}
+        /* Стан: Об'єкт пролетів "крізь" глядача */
+        .layer.exit {
+            opacity: 0;
+            visibility: visible;
+            transform: translateZ(1000px) scale(3);
+            filter: blur(15px);
+        }
 
-/* Твоя Титульна сторінка (модифікована під шар) */
-.container {
-  text-align: center;
-}
+        /* Твоя Титульна сторінка */
+        .container {
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
 
-.logo img {
-  width: 300px;
-  height: auto;
-  filter: drop-shadow(0 0 20px rgba(255,255,255,0.4));
-}
+        .logo img {
+            width: 280px;
+            height: auto;
+            filter: drop-shadow(0 0 30px rgba(255,255,255,0.2));
+            margin-bottom: 10px;
+        }
 
-.tagline {
-  margin-bottom: 40px;
-  font-family: "Pacifico", cursive;
-  font-size: 22px;
-  opacity: 0.8;
-}
+        .tagline {
+            margin-bottom: 35px;
+            font-family: "Pacifico", cursive;
+            font-size: 20px;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
 
-.buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
 
-.button {
-  padding: 12px 28px;
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 50px;
-  background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(12px);
-  color: white;
-  text-decoration: none;
-  font-size: 14px;
-  transition: all 0.4s ease;
-}
+        .button {
+            padding: 14px 20px;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.03);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
 
-.button:hover {
-  background: rgba(255,255,255,0.8);
-  color: black;
-  transform: translateY(-3px) scale(1.05);
-}
+        .button:active {
+            background: rgba(255,255,255,0.2);
+            transform: scale(0.98);
+        }
 
-/* Стиль для твоїх 4-х SVG зображень */
-.svg-content {
-  width: 100%;       /* Заповнювати всю ширину шару */
-  height: 100%;      /* Заповнювати всю висоту шару */
-  max-width: 95vw;   /* Невеликий відступ по краях для повітря */
-  max-height: 90vh;  /* Щоб зображення не впиралося в краї екрана */
-  object-fit: contain; /* Зберігати пропорції, щоб не розтягнути картинку */
-}
+        /* Стиль для SVG зображень */
+        .svg-content {
+            width: auto;
+            height: auto;
+            max-width: 85vw;
+            max-height: 80vh;
+            object-fit: contain;
+            /* Ефект легкого світіння для SVG */
+            filter: drop-shadow(0 0 15px rgba(255,255,255,0.1));
+        }
 
-</style>
+    </style>
 </head>
 
 <body>
 
 <div id="scene-container">
-  <div class="layer active" id="layer-0">
-    <div class="container">
-      <div class="logo">
-        <img src="flomaster.svg" alt="FLOMASTER Logo">
-      </div>
-      <div class="tagline">Від ідеї до принта.</div>
-      <div class="buttons">
-        <a class="button" href="https://dtf.org.ua/">Сайт</a>
-        <a class="button" href="https://www.instagram.com/flomaster_dtf/">Instagram</a>
-        <a class="button" href="https://t.me/Flomasterstudio">Telegram</a>
-        <a class="button" href="viber://chat?number=%2B380983583133">Viber</a>
-        <a class="button" href="contact.vcf">Зберегти контакт</a>
-      </div>
+    <div class="layer active" id="layer-0">
+        <div class="container">
+            <div class="logo">
+                <img src="flomaster.svg" alt="FLOMASTER Logo">
+            </div>
+            <div class="tagline">Від ідеї до принта.</div>
+            <div class="buttons">
+                <a class="button" href="https://dtf.org.ua/">ВЕБ-САЙТ</a>
+                <a class="button" href="https://www.instagram.com/flomaster_dtf/">INSTAGRAM</a>
+                <a class="button" href="https://t.me/Flomasterstudio">TELEGRAM</a>
+                <a class="button" href="viber://chat?number=%2B380983583133">VIBER</a>
+                <a class="button" href="contact.vcf">ЗБЕРЕГТИ КОНТАКТ</a>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <div class="layer" id="layer-1"><img src="1.svg" class="svg-content" alt="Work 1"></div>
-  <div class="layer" id="layer-2"><img src="2.svg" class="svg-content" alt="Work 2"></div>
-  <div class="layer" id="layer-3"><img src="3.svg" class="svg-content" alt="Work 3"></div>
-  <div class="layer" id="layer-4"><img src="4.svg" class="svg-content" alt="Work 4"></div>
+    <div class="layer incoming" id="layer-1"><img src="1.svg" class="svg-content" alt="Work 1"></div>
+    <div class="layer" id="layer-2"><img src="2.svg" class="svg-content" alt="Work 2"></div>
+    <div class="layer" id="layer-3"><img src="3.svg" class="svg-content" alt="Work 3"></div>
+    <div class="layer" id="layer-4"><img src="4.svg" class="svg-content" alt="Work 4"></div>
+    <div class="layer" id="layer-5"><img src="5.svg" class="svg-content" alt="Work 5"></div>
 </div>
 
 <script>
-  let currentLayer = 0;
-  const layers = document.querySelectorAll('.layer');
-  const totalLayers = layers.length;
-  let isAnimating = false;
+    let currentLayer = 0;
+    const layers = document.querySelectorAll('.layer');
+    const totalLayers = layers.length;
+    let isAnimating = false;
 
-  function changeLayer(direction) {
-    if (isAnimating) return;
-    isAnimating = true;
+    function updateLayers(direction) {
+        if (isAnimating) return;
+        isAnimating = true;
 
-    const prevLayer = currentLayer;
-    
-    if (direction === 'down') {
-      currentLayer = (currentLayer + 1) % totalLayers;
-    } else {
-      currentLayer = (currentLayer - 1 + totalLayers) % totalLayers;
+        const prevLayer = currentLayer;
+
+        if (direction === 'down') {
+            currentLayer = (currentLayer + 1) % totalLayers;
+        } else {
+            currentLayer = (currentLayer - 1 + totalLayers) % totalLayers;
+        }
+
+        // Логіка перемикання класів для 3D польоту
+        layers.forEach((layer, index) => {
+            layer.classList.remove('active', 'exit', 'incoming');
+            
+            if (index === currentLayer) {
+                layer.classList.add('active');
+            } else if (index === prevLayer) {
+                // Якщо йдемо вниз — старий слайд вилітає на нас, якщо вгору — у глибину
+                layer.classList.add(direction === 'down' ? 'exit' : 'incoming');
+            } else {
+                // Всі інші ховаються в глибині (або чекають зверху)
+                if (direction === 'down') {
+                     layer.classList.add('incoming');
+                } else {
+                     layer.classList.add('exit');
+                }
+            }
+        });
+
+        // Блокуємо повторне натискання на час анімації
+        setTimeout(() => {
+            isAnimating = false;
+        }, 1000); 
     }
 
-    // Очищаємо всі класи перед зміною
-    layers.forEach(l => {
-      l.classList.remove('active', 'exit');
-    });
+    // Блокування системного скролу
+    window.addEventListener('touchmove', (e) => {
+        if (e.cancelable) e.preventDefault();
+    }, { passive: false });
 
-    // Попередній шар "вилітає" (стає великим і зникає)
-    layers[prevLayer].classList.add('exit');
-    
-    // Новий шар стає активним (наближається з глибини)
-    layers[currentLayer].classList.add('active');
+    // Обробка миші
+    window.addEventListener('wheel', (e) => {
+        if (isAnimating) return;
+        if (Math.abs(e.deltaY) > 20) {
+            updateLayers(e.deltaY > 0 ? 'down' : 'up');
+        }
+    }, { passive: false });
 
-    setTimeout(() => {
-      isAnimating = false;
-    }, 800); 
-  }
+    // Обробка свайпів (Чутливість під Poco)
+    let touchStartY = 0;
+    window.addEventListener('touchstart', (e) => {
+        touchStartY = e.touches[0].clientY;
+    }, { passive: false });
 
-  // 1. Блокування стандартного скролу та "дьоргання" всієї сторінки
-  window.addEventListener('touchmove', (e) => {
-    if (e.cancelable) e.preventDefault();
-  }, { passive: false });
+    window.addEventListener('touchend', (e) => {
+        let touchEndY = e.changedTouches[0].clientY;
+        let distance = touchStartY - touchEndY;
 
-  // 2. Обробка коліщатка миші
-  window.addEventListener('wheel', (e) => {
-    if (Math.abs(e.deltaY) < 10) return; // Ігноруємо надто дрібні рухи
-    if (e.deltaY > 0) changeLayer('down');
-    else changeLayer('up');
-  }, { passive: false });
+        if (Math.abs(distance) > 50) {
+            updateLayers(distance > 0 ? 'down' : 'up');
+        }
+    }, { passive: false });
 
-  // 3. Обробка свайпів
-  let touchStartY = 0;
-  window.addEventListener('touchstart', (e) => {
-    touchStartY = e.touches[0].clientY;
-  }, { passive: false });
-
-  window.addEventListener('touchend', (e) => {
-    let touchEndY = e.changedTouches[0].clientY;
-    let distance = touchStartY - touchEndY;
-
-    // Поріг у 80 пікселів, щоб уникнути випадкових спрацювань
-    if (Math.abs(distance) > 80) {
-      if (distance > 0) changeLayer('down');
-      else changeLayer('up');
-    }
-  }, { passive: false });
+    // Ініціалізація: готуємо наступний шар у черзі
+    layers[(currentLayer + 1) % totalLayers].classList.add('incoming');
 </script>
 
 <script data-goatcounter="https://flomaster.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
