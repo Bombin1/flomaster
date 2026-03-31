@@ -9,79 +9,74 @@
 <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">  
 
 <style>
+/* Базові налаштування */
 * { margin:0; padding:0; box-sizing:border-box; }
 
 body {
   font-family: 'Inter', sans-serif;
-  background: radial-gradient(circle at 50% 30%, #111 0%, #000 60%);
-  animation: bgPulse 8s ease-in-out infinite alternate;
+  background: #000;
   height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
+  width: 100vw;
+  overflow: hidden; /* Вимикаємо стандартний скрол */
   color: white;
 }
 
-@keyframes bgPulse {
-  0% { background-position: 0% 0%; }
-  50% { background-position: 100% 100%; }
-  100% { background-position: 0% 0%; }
+/* Контейнер для всіх шарів */
+#scene-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  perspective: 1000px;
 }
 
+/* Загальний стиль для кожного шару */
+.layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+              opacity 0.8s ease;
+  pointer-events: none; /* Щоб не заважали клікати, коли прозорі */
+  opacity: 0;
+  transform: scale(0.5); /* Початковий стан у глибині */
+}
+
+/* Активний шар */
+.layer.active {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: all;
+}
+
+/* Шар, що вже пройшов (збільшується і зникає) */
+.layer.exit {
+  opacity: 0;
+  transform: scale(2);
+}
+
+/* Твоя Титульна сторінка (модифікована під шар) */
 .container {
   text-align: center;
-  opacity: 0;
-  animation: fadeInContainer 1.5s ease forwards;
 }
 
-@keyframes fadeInContainer {
-  to { opacity: 1; }
-}
-
-/* Логотип */
 .logo img {
-  width: 300px; /* або свій розмір */
+  width: 300px;
   height: auto;
-  opacity: 0;
-  transform: scale(0.7);
-  animation: logoAppear 1.5s ease forwards;
-  filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));
+  filter: drop-shadow(0 0 20px rgba(255,255,255,0.4));
 }
 
-@keyframes logoAppear {
-  to {
-    opacity: 1;
-    transform: scale(1);
-    filter: drop-shadow(0 0 20px rgba(255,255,255,0.6));
-  }
-}
-/* Tagline */
-/* Залишаємо анімацію з .tagline */
 .tagline {
-  font-weight: 300;               
-  font-size: 16px;                
-  opacity: 0;                      
-  margin-bottom: 40px;            
-  animation: taglineAppear 1.5s 1.2s ease forwards; 
-  font-family: inherit; /* важливо, щоб не перекривати Pacifico */
-}
-
-/* Клас для шрифту Pacifico тільки на цю надпис */
-.pacifico-tagline {
+  margin-bottom: 40px;
   font-family: "Pacifico", cursive;
-  font-weight: normal;
-  font-size: 22px; /* регулюй під свій дизайн */
+  font-size: 22px;
+  opacity: 0.8;
 }
 
-@keyframes taglineAppear {
-  to {
-    opacity: 0.8;
-    transform: translateY(0);
-  }
-}
-
-/* Кнопки */
 .buttons {
   display: flex;
   flex-direction: column;
@@ -98,51 +93,101 @@ body {
   text-decoration: none;
   font-size: 14px;
   transition: all 0.4s ease;
-  opacity: 0;
-  animation: buttonAppear 1s 1.8s ease forwards;
-}
-
-@keyframes buttonAppear {
-  to { opacity: 1; }
 }
 
 .button:hover {
   background: rgba(255,255,255,0.8);
   color: black;
   transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 0 15px rgba(255,255,255,0.3);
 }
 
-/* Лічильник */
-.counter {
-  position: absolute;
-  bottom: 20px;
-  font-size: 12px;
-  opacity: 0.4;
+/* Стиль для твоїх 4-х SVG зображень */
+.svg-content {
+  max-width: 90%;
+  max-height: 80vh;
+  object-fit: contain;
 }
 
 </style>
 </head>
 
 <body>
-<div class="container">
-  <div class="logo">
-  <img src="flomaster.svg" alt="FLOMASTER Logo">
-</div>
-  <div class="tagline pacifico-tagline">
-  Від ідеї до принта.
+
+<div id="scene-container">
+  <div class="layer active" id="layer-0">
+    <div class="container">
+      <div class="logo">
+        <img src="flomaster.svg" alt="FLOMASTER Logo">
+      </div>
+      <div class="tagline">Від ідеї до принта.</div>
+      <div class="buttons">
+        <a class="button" href="https://dtf.org.ua/">Сайт</a>
+        <a class="button" href="https://www.instagram.com/flomaster_dtf/">Instagram</a>
+        <a class="button" href="https://t.me/Flomasterstudio">Telegram</a>
+        <a class="button" href="viber://chat?number=%2B380983583133">Viber</a>
+        <a class="button" href="contact.vcf">Зберегти контакт</a>
+      </div>
+    </div>
   </div>
 
-  <div class="buttons">
-    <a class="button" href="https://dtf.org.ua/">Сайт</a>
-    <a class="button" href="https://www.instagram.com/flomaster_dtf/">Instagram</a>
-    <a class="button" href="https://t.me/Flomasterstudio">Telegram</a>
-    <a class="button" href="viber://chat?number=%2B380983583133">Viber</a>
-    <a class="button" href="contact.vcf">Зберегти контакт</a>
-  </div>
+  <div class="layer" id="layer-1"><img src="1.svg" class="svg-content" alt="Work 1"></div>
+  <div class="layer" id="layer-2"><img src="2.svg" class="svg-content" alt="Work 2"></div>
+  <div class="layer" id="layer-3"><img src="3.svg" class="svg-content" alt="Work 3"></div>
+  <div class="layer" id="layer-4"><img src="4.svg" class="svg-content" alt="Work 4"></div>
 </div>
-<script data-goatcounter="https://flomaster.goatcounter.com/count"
-        async src="//gc.zgo.at/count.js"></script>
+
+<script>
+  let currentLayer = 0;
+  const layers = document.querySelectorAll('.layer');
+  const totalLayers = layers.length;
+  let isAnimating = false;
+
+  function changeLayer(direction) {
+    if (isAnimating) return;
+    isAnimating = true;
+
+    const prevLayer = currentLayer;
+    
+    if (direction === 'down') {
+      currentLayer = (currentLayer + 1) % totalLayers;
+    } else {
+      currentLayer = (currentLayer - 1 + totalLayers) % totalLayers;
+    }
+
+    // Очищаємо попередні стани
+    layers.forEach(l => l.classList.remove('active', 'exit'));
+
+    // Логіка для "старого" шару
+    layers[prevLayer].classList.add('exit');
+    
+    // Логіка для "нового" шару
+    layers[currentLayer].classList.add('active');
+
+    setTimeout(() => {
+      isAnimating = false;
+    }, 800); // Час має збігатися з CSS transition
+  }
+
+  // Обробка коліщатка миші
+  window.addEventListener('wheel', (e) => {
+    if (e.deltaY > 0) changeLayer('down');
+    else changeLayer('up');
+  });
+
+  // Обробка свайпів для Poco/мобільних
+  let touchStartY = 0;
+  window.addEventListener('touchstart', (e) => {
+    touchStartY = e.touches[0].clientY;
+  });
+
+  window.addEventListener('touchend', (e) => {
+    let touchEndY = e.changedTouches[0].clientY;
+    if (touchStartY - touchEndY > 50) changeLayer('down');
+    if (touchEndY - touchStartY > 50) changeLayer('up');
+  });
+</script>
+
+<script data-goatcounter="https://flomaster.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 
 </body>
 </html>
