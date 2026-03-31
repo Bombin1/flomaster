@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FLOMASTER | Digital Print Studio</title>
+    <title>FLOMASTER | Print Studio</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;600&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">  
@@ -28,7 +28,7 @@
             position: relative;
             width: 100%;
             height: 100%;
-            perspective: 800px; /* Трохи менше значення для гострішої перспективи */
+            perspective: 1000px;
             perspective-origin: 50% 50%;
             overflow: hidden;
             display: flex;
@@ -59,7 +59,6 @@
             transition: none !important; 
         }
 
-        /* Контейнер титульної */
         .container {
             text-align: center;
             width: 100%;
@@ -68,16 +67,16 @@
         }
 
         .logo img {
-            width: 280px;
+            width: 260px;
             height: auto;
             filter: drop-shadow(0 0 30px rgba(255,255,255,0.2));
             margin-bottom: 10px;
         }
 
         .tagline {
-            margin-bottom: 35px;
+            margin-bottom: 30px;
             font-family: "Pacifico", cursive;
-            font-size: 20px;
+            font-size: 18px;
             color: #fff;
         }
 
@@ -91,24 +90,28 @@
             padding: 14px 20px;
             border: 1px solid rgba(255,255,255,0.15);
             border-radius: 12px;
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             color: white;
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
             display: block;
+            transition: background 0.3s;
+        }
+
+        .button:active {
+            background: rgba(255,255,255,0.3);
         }
 
         .svg-content {
             width: auto;
             height: auto;
             max-width: 90vw;
-            max-height: 85vh;
+            max-height: 80vh;
             object-fit: contain;
         }
-
     </style>
 </head>
 
@@ -132,10 +135,11 @@
             </div>
         </div>
 
-        <div class="layer" id="layer-1"><img src="1.svg" class="svg-content" alt="Work 1"></div>
-        <div class="layer" id="layer-2"><img src="2.svg" class="svg-content" alt="Work 2"></div>
-        <div class="layer" id="layer-3"><img src="3.svg" class="svg-content" alt="Work 3"></div>
-        <div class="layer" id="layer-4"><img src="4.svg" class="svg-content" alt="Work 4"></div>
+        <div class="layer" id="layer-1"><img src="1.svg" class="svg-content"></div>
+        <div class="layer" id="layer-2"><img src="2.svg" class="svg-content"></div>
+        <div class="layer" id="layer-3"><img src="3.svg" class="svg-content"></div>
+        <div class="layer" id="layer-4"><img src="4.svg" class="svg-content"></div>
+        <div class="layer" id="layer-5"><img src="5.svg" class="svg-content"></div>
     </div>
 </div>
 
@@ -143,81 +147,101 @@
     const layers = document.querySelectorAll('.layer');
     const totalLayers = layers.length;
     
-    // Параметри тунелю
-    const zSpacing = -1200; // Збільшив відстань, щоб вони менше перетиналися
+    const zSpacing = -1400; // Велика відстань для чіткості
     const loopDistance = totalLayers * Math.abs(zSpacing);
-    let zOffset = 0;
     
-    // Плавність (інерція)
-    let targetZOffset = 0;
-    let currentZOffset = 0;
+    let targetZ = 0;
+    let currentZ = 0;
 
     function render() {
-        // Плавне слідування за метою (easing)
-        currentZOffset += (targetZOffset - currentZOffset) * 0.1;
+        // Плавна інерція
+        currentZ += (targetZ - currentZ) * 0.08;
 
-        const loopOffset = (currentZOffset % loopDistance + loopDistance) % loopDistance;
+        const loopOffset = (currentZ % loopDistance + loopDistance) % loopDistance;
 
         layers.forEach((layer, index) => {
             let layerZ = index * zSpacing;
-            let relativeZ = layerZ + loopOffset;
+            let relZ = layerZ + loopOffset;
 
-            // Зациклення
-            if (relativeZ > 600) relativeZ -= loopDistance;
-            else if (relativeZ < (zSpacing * (totalLayers - 0.5))) relativeZ += loopDistance;
+            // Безкінечний цикл
+            if (relZ > 800) relZ -= loopDistance;
+            else if (relZ < (zSpacing * (totalLayers - 0.5))) relZ += loopDistance;
 
             let opacity = 0;
             let scale = 1;
-            let brightness = 1;
+            let blur = 0;
 
-            // --- НОВА ЛОГІКА ВИДИМОСТІ ---
-            if (relativeZ > 0) {
-                // Вилітає на глядача
-                opacity = 1 - (relativeZ / 600);
-                scale = 1 + (relativeZ / 300);
-                brightness = 1;
-            } else if (relativeZ > -1000) {
-                // Поступово з'являється з темряви
-                // Картинка стає повністю видимою тільки коли підлітає ближче ніж -1000px
-                opacity = 1 - (Math.abs(relativeZ) / 1000);
-                brightness = 1 - (Math.abs(relativeZ) / 1000);
-                scale = 1;
+            if (relZ > 0) {
+                // Виліт на глядача: починаємо блюр і зникнення ПІСЛЯ 200px
+                const exitStart = 200; 
+                if (relZ > exitStart) {
+                    const factor = (relZ - exitStart) / 600;
+                    opacity = 1 - factor;
+                    scale = 1 + factor * 2;
+                    blur = factor * 20;
+                } else {
+                    opacity = 1;
+                    scale = 1;
+                    blur = 0;
+                }
             } else {
-                // Все що далі - повністю приховано
-                opacity = 0;
+                // Поява з глибини: стає видимим ПІСЛЯ -1000px
+                const entryStart = -1000;
+                if (relZ > entryStart) {
+                    const factor = 1 - (relZ / entryStart);
+                    opacity = factor;
+                    blur = (1 - factor) * 15;
+                } else {
+                    opacity = 0;
+                }
             }
 
-            layer.style.transform = `translate3d(0, 0, ${relativeZ}px) scale(${scale})`;
-            layer.style.opacity = opacity;
-            layer.style.filter = `brightness(${brightness})`;
+            layer.style.transform = `translate3d(0, 0, ${relZ}px) scale(${scale})`;
+            layer.style.opacity = Math.max(0, opacity);
+            layer.style.filter = `blur(${blur}px)`;
 
-            // Керування кнопками титулки
+            // Керування кнопками (активні в широкому діапазоні для зручності)
             if (index === 0) {
-                const isFocused = relativeZ > -100 && relativeZ < 100;
-                layer.style.pointerEvents = isFocused ? 'all' : 'none';
-                layer.style.visibility = relativeZ > 500 || relativeZ < -800 ? 'hidden' : 'visible';
+                const isClickable = relZ > -300 && relZ < 300;
+                layer.style.pointerEvents = isClickable ? 'all' : 'none';
             }
         });
 
         requestAnimationFrame(render);
     }
 
-    // Керування (з інерцією для плавності)
+    // Обробка скролу з "Магнітним ефектом"
     window.addEventListener('wheel', (e) => {
-        targetZOffset += e.deltaY * 1.5;
+        let delta = e.deltaY;
+        
+        // Магніт: якщо ми біля центру шару, скрол іде тугіше
+        layers.forEach((_, index) => {
+            let layerZ = index * zSpacing;
+            let relZ = (layerZ + (targetZ % loopDistance + loopDistance) % loopDistance);
+            if (Math.abs(relZ) < 150) delta *= 0.4; 
+        });
+
+        targetZ += delta * 1.2;
         if (e.cancelable) e.preventDefault();
     }, { passive: false });
 
-    let touchStartY = 0;
+    let lastY = 0;
     window.addEventListener('touchstart', (e) => {
-        touchStartY = e.touches[0].clientY;
+        lastY = e.touches[0].clientY;
     });
 
     window.addEventListener('touchmove', (e) => {
-        const touchY = e.touches[0].clientY;
-        const deltaY = touchStartY - touchY;
-        targetZOffset += deltaY * 4; // Чутливість Poco
-        touchStartY = touchY;
+        let deltaY = lastY - e.touches[0].clientY;
+        
+        // Магніт для тач-скрину (наприклад, для Poco X6 Pro)
+        layers.forEach((_, index) => {
+            let layerZ = index * zSpacing;
+            let relZ = (layerZ + (targetZ % loopDistance + loopDistance) % loopDistance);
+            if (Math.abs(relZ) < 100) deltaY *= 0.5;
+        });
+
+        targetZ += deltaY * 3.5;
+        lastY = e.touches[0].clientY;
         if (e.cancelable) e.preventDefault();
     }, { passive: false });
 
