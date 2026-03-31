@@ -9,7 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">  
 
     <style>
-        /* Базові налаштування */
         * { margin:0; padding:0; box-sizing:border-box; }
 
         body {
@@ -20,21 +19,31 @@
             color: white;
             overflow: hidden;
             position: fixed;
-            touch-action: none;
-            overscroll-behavior: none;
+            touch-action: none; /* Вимикаємо стандартний скрол браузера */
             user-select: none;
             -webkit-user-select: none;
         }
 
-        /* Контейнер для сцени */
-        #scene-container {
+        /* Головна сцена з перспективою */
+        #viewport {
             position: relative;
             width: 100%;
             height: 100%;
-            perspective: 1200px; /* Глибина тунелю */
+            perspective: 1000px; /* Глибина 3D простору */
+            perspective-origin: 50% 50%;
+            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
+        }
+
+        /* Контейнер, який ми будемо рухати */
+        #tunnel {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d; /* Важливо для 3D */
+            will-change: transform;
         }
 
         /* Загальний стиль для кожного шару (слайда) */
@@ -42,48 +51,18 @@
             position: absolute;
             width: 100%;
             height: 100%;
+            top: 0;
+            left: 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            opacity: 0;
-            visibility: hidden;
-            /* Плавність переходу як на UNKLE */
-            transition: 
-                transform 1.2s cubic-bezier(0.22, 1, 0.36, 1), 
-                opacity 1s ease,
-                filter 1.2s ease;
-            pointer-events: none;
             will-change: transform, opacity;
-            z-index: 1;
+            backface-visibility: hidden; /* Оптимізація */
+            /* Вимикаємо CSS transitions, рух тільки через JS */
+            transition: none !important; 
         }
 
-        /* Стан: Об'єкт у глибині (чекає своєї черги) */
-        .layer.incoming {
-            opacity: 0;
-            visibility: visible;
-            transform: translateZ(-1500px) scale(0.1);
-            filter: blur(10px);
-        }
-
-        /* Стан: Об'єкт прямо перед очима (активний) */
-        .layer.active {
-            opacity: 1;
-            visibility: visible;
-            transform: translateZ(0px) scale(1);
-            filter: blur(0px);
-            pointer-events: all;
-            z-index: 10;
-        }
-
-        /* Стан: Об'єкт пролетів "крізь" глядача */
-        .layer.exit {
-            opacity: 0;
-            visibility: visible;
-            transform: translateZ(1000px) scale(3);
-            filter: blur(15px);
-        }
-
-        /* Твоя Титульна сторінка */
+        /* Тітульна сторінка */
         .container {
             text-align: center;
             width: 100%;
@@ -124,7 +103,15 @@
             font-size: 14px;
             font-weight: 500;
             letter-spacing: 0.5px;
-            transition: all 0.3s ease;
+            display: block;
+        }
+
+        /* Відключаємо hover на мобільних, щоб не "липнув" */
+        @media (hover: hover) {
+            .button:hover {
+                background: rgba(255,255,255,0.1);
+                border-color: rgba(255,255,255,0.5);
+            }
         }
 
         .button:active {
@@ -136,10 +123,9 @@
         .svg-content {
             width: auto;
             height: auto;
-            max-width: 85vw;
-            max-height: 80vh;
+            max-width: 90vw;
+            max-height: 85vh;
             object-fit: contain;
-            /* Ефект легкого світіння для SVG */
             filter: drop-shadow(0 0 15px rgba(255,255,255,0.1));
         }
 
@@ -148,103 +134,140 @@
 
 <body>
 
-<div id="scene-container">
-    <div class="layer active" id="layer-0">
-        <div class="container">
-            <div class="logo">
-                <img src="flomaster.svg" alt="FLOMASTER Logo">
-            </div>
-            <div class="tagline">Від ідеї до принта.</div>
-            <div class="buttons">
-                <a class="button" href="https://dtf.org.ua/">ВЕБ-САЙТ</a>
-                <a class="button" href="https://www.instagram.com/flomaster_dtf/">INSTAGRAM</a>
-                <a class="button" href="https://t.me/Flomasterstudio">TELEGRAM</a>
-                <a class="button" href="viber://chat?number=%2B380983583133">VIBER</a>
-                <a class="button" href="contact.vcf">ЗБЕРЕГТИ КОНТАКТ</a>
+<div id="viewport">
+    <div id="tunnel">
+        <div class="layer" id="layer-0">
+            <div class="container">
+                <div class="logo">
+                    <img src="flomaster.svg" alt="FLOMASTER Logo">
+                </div>
+                <div class="tagline">Від ідеї до принта.</div>
+                <div class="buttons">
+                    <a class="button" href="https://dtf.org.ua/">ВЕБ-САЙТ</a>
+                    <a class="button" href="https://www.instagram.com/flomaster_dtf/">INSTAGRAM</a>
+                    <a class="button" href="https://t.me/Flomasterstudio">TELEGRAM</a>
+                    <a class="button" href="viber://chat?number=%2B380983583133">VIBER</a>
+                    <a class="button" href="contact.vcf">ЗБЕРЕГТИ КОНТАКТ</a>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="layer incoming" id="layer-1"><img src="1.svg" class="svg-content" alt="Work 1"></div>
-    <div class="layer" id="layer-2"><img src="2.svg" class="svg-content" alt="Work 2"></div>
-    <div class="layer" id="layer-3"><img src="3.svg" class="svg-content" alt="Work 3"></div>
-    <div class="layer" id="layer-4"><img src="4.svg" class="svg-content" alt="Work 4"></div>
-    <div class="layer" id="layer-5"><img src="5.svg" class="svg-content" alt="Work 5"></div>
+        <div class="layer" id="layer-1"><img src="1.svg" class="svg-content" alt="Work 1"></div>
+        <div class="layer" id="layer-2"><img src="2.svg" class="svg-content" alt="Work 2"></div>
+        <div class="layer" id="layer-3"><img src="3.svg" class="svg-content" alt="Work 3"></div>
+        <div class="layer" id="layer-4"><img src="4.svg" class="svg-content" alt="Work 4"></div>
+        <div class="layer" id="layer-5"><img src="5.svg" class="svg-content" alt="Work 5"></div>
+    </div>
 </div>
 
 <script>
-    let currentLayer = 0;
+    const tunnel = document.getElementById('tunnel');
     const layers = document.querySelectorAll('.layer');
     const totalLayers = layers.length;
-    let isAnimating = false;
+    
+    // НАЛАШТУВАННЯ ТУНЕЛЮ (в пікселях по осі Z)
+    const baseZSpacing = -1000; // Відстань між зображеннями вглиб
+    const loopDistance = totalLayers * Math.abs(baseZSpacing); // Довжина всього циклу
+    
+    // Поточне положення "камери" (віртуальний скрол)
+    let zOffset = 0;
+    
+    // Змінні для обробки свайпів
+    let touchStartY = 0;
+    let isTouching = false;
 
-    function updateLayers(direction) {
-        if (isAnimating) return;
-        isAnimating = true;
+    // --- ГОЛОВНА ФУНКЦІЯ РЕНДЕРУ (працює в реальному часі) ---
+    function render() {
+        // Приводимо zOffset до діапазону циклу, щоб створити нескінченність
+        const currentLoopOffset = (zOffset % loopDistance + loopDistance) % loopDistance;
 
-        const prevLayer = currentLayer;
-
-        if (direction === 'down') {
-            currentLayer = (currentLayer + 1) % totalLayers;
-        } else {
-            currentLayer = (currentLayer - 1 + totalLayers) % totalLayers;
-        }
-
-        // Логіка перемикання класів для 3D польоту
         layers.forEach((layer, index) => {
-            layer.classList.remove('active', 'exit', 'incoming');
+            // Базове положення цього шару в тунелі
+            let layerZ = index * baseZSpacing;
             
-            if (index === currentLayer) {
-                layer.classList.add('active');
-            } else if (index === prevLayer) {
-                // Якщо йдемо вниз — старий слайд вилітає на нас, якщо вгору — у глибину
-                layer.classList.add(direction === 'down' ? 'exit' : 'incoming');
+            // Рахуємо положення шару відносно "камери"
+            let relativeZ = layerZ + currentLoopOffset;
+
+            // --- ЛОГІКА ЗАСІЦЛЕННЯ ОКРЕМОГО ШАРУ ---
+            // Якщо шар пролетів "за спину" (relativeZ > 500), 
+            // переставляємо його в самий кінець тунелю.
+            if (relativeZ > 500) {
+                relativeZ -= loopDistance;
+            } 
+            // Якщо ми скролимо назад і шар занадто глибоко, переставляємо на початок
+            else if (relativeZ < (baseZSpacing * (totalLayers - 0.5))) {
+                relativeZ += loopDistance;
+            }
+
+            // --- ЕФЕКТ UNKLE (проліт повз камеру) ---
+            let opacity = 1;
+            let scale = 1;
+
+            if (relativeZ > 0) {
+                // Коли об'єкт наближається до камери (0px) і пролітає далі (до 500px):
+                // 1. Плавно зникає (opacity 1 -> 0)
+                opacity = 1 - (relativeZ / 500); 
+                // 2. Швидко збільшується (scale 1 -> 3), як на UNKLE
+                scale = 1 + (relativeZ / 250); 
             } else {
-                // Всі інші ховаються в глибині (або чекають зверху)
-                if (direction === 'down') {
-                     layer.classList.add('incoming');
-                } else {
-                     layer.classList.add('exit');
-                }
+                // Коли об'єкт у глибині: opacity 1, scale 1
+                opacity = 1;
+                scale = 1;
+            }
+
+            // Застосовуємо трансформації. Використовуємо translate3d для GPU прискорення
+            layer.style.transform = `translate3d(0, 0, ${relativeZ}px) scale(${scale})`;
+            layer.style.opacity = opacity;
+
+            // Керування клікабельністю кнопок: тільки якщо шар прямо перед очима
+            if (index === 0) { // Для Тітульної
+                layer.style.pointerEvents = (relativeZ > -200 && relativeZ < 200) ? 'all' : 'none';
             }
         });
 
-        // Блокуємо повторне натискання на час анімації
-        setTimeout(() => {
-            isAnimating = false;
-        }, 1000); 
+        // Запускаємо наступний кадр анімації
+        requestAnimationFrame(render);
     }
 
-    // Блокування системного скролу
-    window.addEventListener('touchmove', (e) => {
+    // --- ОБРОБНИКИ ПОДІЙ (керування zOffset) ---
+
+    // 1. Миша (коліщатко)
+    window.addEventListener('wheel', (e) => {
+        // Чутливість миші (можна підправити)
+        zOffset += e.deltaY * 2; 
         if (e.cancelable) e.preventDefault();
     }, { passive: false });
 
-    // Обробка миші
-    window.addEventListener('wheel', (e) => {
-        if (isAnimating) return;
-        if (Math.abs(e.deltaY) > 20) {
-            updateLayers(e.deltaY > 0 ? 'down' : 'up');
-        }
-    }, { passive: false });
-
-    // Обробка свайпів (Чутливість під Poco)
-    let touchStartY = 0;
+    // 2. Смартфон (свайп)
     window.addEventListener('touchstart', (e) => {
         touchStartY = e.touches[0].clientY;
+        isTouching = true;
     }, { passive: false });
 
-    window.addEventListener('touchend', (e) => {
-        let touchEndY = e.changedTouches[0].clientY;
-        let distance = touchStartY - touchEndY;
+    window.addEventListener('touchmove', (e) => {
+        if (!isTouching) return;
+        const touchCurrentY = e.touches[0].clientY;
+        
+        // Різниця руху пальця
+        const deltaY = touchStartY - touchCurrentY;
+        
+        // Додаємо різницю до zOffset. *3 - це чутливість свайпу на Poco
+        zOffset += deltaY * 3; 
 
-        if (Math.abs(distance) > 50) {
-            updateLayers(distance > 0 ? 'down' : 'up');
-        }
+        // Оновлюємо початкову точку для наступного кадру руху
+        touchStartY = touchCurrentY;
+
+        if (e.cancelable) e.preventDefault();
     }, { passive: false });
 
-    // Ініціалізація: готуємо наступний шар у черзі
-    layers[(currentLayer + 1) % totalLayers].classList.add('incoming');
+    window.addEventListener('touchend', () => {
+        isTouching = false;
+    });
+
+    // --- ЗАПУСК ---
+    // Ініціалізуємо render loop
+    requestAnimationFrame(render);
+
 </script>
 
 <script data-goatcounter="https://flomaster.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
