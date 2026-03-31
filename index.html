@@ -171,10 +171,10 @@
                 // ВИЛІТ НА ГЛЯДАЧА
                 // Тепер блюр починається значно пізніше (після 400px), 
                 // а прозорість — основний інструмент зникнення.
-                const exitStart = 200; 
+                const exitStart = 100; 
                 if (relZ > exitStart) {
-                    const factor = (relZ - exitStart) / 400;
-                    opacity = 1 - (factor * 1.2); // Швидше стає прозорим
+                    const factor = (relZ - exitStart) / 600;
+                    opacity = 1 //- (factor * 1.2); // Швидше стає прозорим
                     scale = 1 + factor * 2;
                     // Блюр вмикаємо тільки в самому кінці прольоту
                     blur = 0 //relZ > 400 ? (relZ - 400) / 15 : 0; 
@@ -186,7 +186,7 @@
             } else {
                 // ПОЯВА З ГЛИБИНИ
                 // Робимо появу м'якшою через прозорість без сильного блюру на вході
-                const entryStart = -1200;
+                const entryStart = -1000;
                 if (relZ > entryStart) {
                     const factor = 1 - (relZ / entryStart);
                     opacity = factor;
