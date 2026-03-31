@@ -153,16 +153,13 @@
     let currentZ = 0;
 
     function render() {
-        // Плавна інерція
         currentZ += (targetZ - currentZ) * 0.08;
-
         const loopOffset = (currentZ % loopDistance + loopDistance) % loopDistance;
 
         layers.forEach((layer, index) => {
             let layerZ = index * zSpacing;
             let relZ = layerZ + loopOffset;
 
-            // Безкінечний цикл
             if (relZ > 800) relZ -= loopDistance;
             else if (relZ < (zSpacing * (totalLayers - 0.5))) relZ += loopDistance;
 
@@ -171,37 +168,41 @@
             let blur = 0;
 
             if (relZ > 0) {
-                // Виліт на глядача: починаємо блюр і зникнення ПІСЛЯ 200px
-                const exitStart = 200; 
+                // ВИЛІТ НА ГЛЯДАЧА
+                // Тепер блюр починається значно пізніше (після 400px), 
+                // а прозорість — основний інструмент зникнення.
+                const exitStart = 150; 
                 if (relZ > exitStart) {
                     const factor = (relZ - exitStart) / 600;
-                    opacity = 1 - factor;
-                    scale = 1 + factor * 2;
-                    blur = factor * 20;
+                    opacity = 1 - (factor * 1.5); // Швидше стає прозорим
+                    scale = 1 + factor * 2.5;
+                    // Блюр вмикаємо тільки в самому кінці прольоту
+                    blur = relZ > 400 ? (relZ - 400) / 10 : 0; 
                 } else {
                     opacity = 1;
                     scale = 1;
                     blur = 0;
                 }
             } else {
-                // Поява з глибини: стає видимим ПІСЛЯ -1000px
-                const entryStart = -1000;
+                // ПОЯВА З ГЛИБИНИ
+                // Робимо появу м'якшою через прозорість без сильного блюру на вході
+                const entryStart = -1200;
                 if (relZ > entryStart) {
                     const factor = 1 - (relZ / entryStart);
                     opacity = factor;
-                    blur = (1 - factor) * 15;
+                    // Мінімальний блюр тільки для зовсім далеких об'єктів
+                    blur = relZ < -600 ? Math.abs(relZ + 600) / 40 : 0;
                 } else {
                     opacity = 0;
                 }
             }
 
             layer.style.transform = `translate3d(0, 0, ${relZ}px) scale(${scale})`;
-            layer.style.opacity = Math.max(0, opacity);
+            layer.style.opacity = Math.max(0, Math.min(1, opacity));
             layer.style.filter = `blur(${blur}px)`;
 
-            // Керування кнопками (активні в широкому діапазоні для зручності)
             if (index === 0) {
-                const isClickable = relZ > -300 && relZ < 300;
+                const isClickable = relZ > -400 && relZ < 250;
                 layer.style.pointerEvents = isClickable ? 'all' : 'none';
             }
         });
