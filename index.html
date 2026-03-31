@@ -19,34 +19,32 @@
             color: white;
             overflow: hidden;
             position: fixed;
-            touch-action: none; /* Вимикаємо стандартний скрол браузера */
+            touch-action: none;
             user-select: none;
             -webkit-user-select: none;
         }
 
-        /* Головна сцена з перспективою */
         #viewport {
             position: relative;
             width: 100%;
             height: 100%;
-            perspective: 1000px; /* Глибина 3D простору */
+            perspective: 800px; /* Трохи менше значення для гострішої перспективи */
             perspective-origin: 50% 50%;
             overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
+            background: #000;
         }
 
-        /* Контейнер, який ми будемо рухати */
         #tunnel {
             position: absolute;
             width: 100%;
             height: 100%;
-            transform-style: preserve-3d; /* Важливо для 3D */
+            transform-style: preserve-3d;
             will-change: transform;
         }
 
-        /* Загальний стиль для кожного шару (слайда) */
         .layer {
             position: absolute;
             width: 100%;
@@ -56,13 +54,12 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            will-change: transform, opacity;
-            backface-visibility: hidden; /* Оптимізація */
-            /* Вимикаємо CSS transitions, рух тільки через JS */
+            will-change: transform, opacity, filter;
+            backface-visibility: hidden;
             transition: none !important; 
         }
 
-        /* Тітульна сторінка */
+        /* Контейнер титульної */
         .container {
             text-align: center;
             width: 100%;
@@ -82,7 +79,6 @@
             font-family: "Pacifico", cursive;
             font-size: 20px;
             color: #fff;
-            text-shadow: 0 0 10px rgba(255,255,255,0.5);
         }
 
         .buttons {
@@ -95,38 +91,22 @@
             padding: 14px 20px;
             border: 1px solid rgba(255,255,255,0.15);
             border-radius: 12px;
-            background: rgba(255,255,255,0.03);
+            background: rgba(255,255,255,0.05);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
             color: white;
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
-            letter-spacing: 0.5px;
             display: block;
         }
 
-        /* Відключаємо hover на мобільних, щоб не "липнув" */
-        @media (hover: hover) {
-            .button:hover {
-                background: rgba(255,255,255,0.1);
-                border-color: rgba(255,255,255,0.5);
-            }
-        }
-
-        .button:active {
-            background: rgba(255,255,255,0.2);
-            transform: scale(0.98);
-        }
-
-        /* Стиль для SVG зображень */
         .svg-content {
             width: auto;
             height: auto;
             max-width: 90vw;
             max-height: 85vh;
             object-fit: contain;
-            filter: drop-shadow(0 0 15px rgba(255,255,255,0.1));
         }
 
     </style>
@@ -160,116 +140,89 @@
 </div>
 
 <script>
-    const tunnel = document.getElementById('tunnel');
     const layers = document.querySelectorAll('.layer');
     const totalLayers = layers.length;
     
-    // НАЛАШТУВАННЯ ТУНЕЛЮ (в пікселях по осі Z)
-    const baseZSpacing = -1000; // Відстань між зображеннями вглиб
-    const loopDistance = totalLayers * Math.abs(baseZSpacing); // Довжина всього циклу
-    
-    // Поточне положення "камери" (віртуальний скрол)
+    // Параметри тунелю
+    const zSpacing = -1200; // Збільшив відстань, щоб вони менше перетиналися
+    const loopDistance = totalLayers * Math.abs(zSpacing);
     let zOffset = 0;
     
-    // Змінні для обробки свайпів
-    let touchStartY = 0;
-    let isTouching = false;
+    // Плавність (інерція)
+    let targetZOffset = 0;
+    let currentZOffset = 0;
 
-    // --- ГОЛОВНА ФУНКЦІЯ РЕНДЕРУ (працює в реальному часі) ---
     function render() {
-        // Приводимо zOffset до діапазону циклу, щоб створити нескінченність
-        const currentLoopOffset = (zOffset % loopDistance + loopDistance) % loopDistance;
+        // Плавне слідування за метою (easing)
+        currentZOffset += (targetZOffset - currentZOffset) * 0.1;
+
+        const loopOffset = (currentZOffset % loopDistance + loopDistance) % loopDistance;
 
         layers.forEach((layer, index) => {
-            // Базове положення цього шару в тунелі
-            let layerZ = index * baseZSpacing;
-            
-            // Рахуємо положення шару відносно "камери"
-            let relativeZ = layerZ + currentLoopOffset;
+            let layerZ = index * zSpacing;
+            let relativeZ = layerZ + loopOffset;
 
-            // --- ЛОГІКА ЗАСІЦЛЕННЯ ОКРЕМОГО ШАРУ ---
-            // Якщо шар пролетів "за спину" (relativeZ > 500), 
-            // переставляємо його в самий кінець тунелю.
-            if (relativeZ > 500) {
-                relativeZ -= loopDistance;
-            } 
-            // Якщо ми скролимо назад і шар занадто глибоко, переставляємо на початок
-            else if (relativeZ < (baseZSpacing * (totalLayers - 0.5))) {
-                relativeZ += loopDistance;
-            }
+            // Зациклення
+            if (relativeZ > 600) relativeZ -= loopDistance;
+            else if (relativeZ < (zSpacing * (totalLayers - 0.5))) relativeZ += loopDistance;
 
-            // --- ЕФЕКТ UNKLE (проліт повз камеру) ---
-            let opacity = 1;
+            let opacity = 0;
             let scale = 1;
+            let brightness = 1;
 
+            // --- НОВА ЛОГІКА ВИДИМОСТІ ---
             if (relativeZ > 0) {
-                // Коли об'єкт наближається до камери (0px) і пролітає далі (до 500px):
-                // 1. Плавно зникає (opacity 1 -> 0)
-                opacity = 1 - (relativeZ / 500); 
-                // 2. Швидко збільшується (scale 1 -> 3), як на UNKLE
-                scale = 1 + (relativeZ / 250); 
-            } else {
-                // Коли об'єкт у глибині: opacity 1, scale 1
-                opacity = 1;
+                // Вилітає на глядача
+                opacity = 1 - (relativeZ / 600);
+                scale = 1 + (relativeZ / 300);
+                brightness = 1;
+            } else if (relativeZ > -1000) {
+                // Поступово з'являється з темряви
+                // Картинка стає повністю видимою тільки коли підлітає ближче ніж -1000px
+                opacity = 1 - (Math.abs(relativeZ) / 1000);
+                brightness = 1 - (Math.abs(relativeZ) / 1000);
                 scale = 1;
+            } else {
+                // Все що далі - повністю приховано
+                opacity = 0;
             }
 
-            // Застосовуємо трансформації. Використовуємо translate3d для GPU прискорення
             layer.style.transform = `translate3d(0, 0, ${relativeZ}px) scale(${scale})`;
             layer.style.opacity = opacity;
+            layer.style.filter = `brightness(${brightness})`;
 
-            // Керування клікабельністю кнопок: тільки якщо шар прямо перед очима
-            if (index === 0) { // Для Тітульної
-                layer.style.pointerEvents = (relativeZ > -200 && relativeZ < 200) ? 'all' : 'none';
+            // Керування кнопками титулки
+            if (index === 0) {
+                const isFocused = relativeZ > -100 && relativeZ < 100;
+                layer.style.pointerEvents = isFocused ? 'all' : 'none';
+                layer.style.visibility = relativeZ > 500 || relativeZ < -800 ? 'hidden' : 'visible';
             }
         });
 
-        // Запускаємо наступний кадр анімації
         requestAnimationFrame(render);
     }
 
-    // --- ОБРОБНИКИ ПОДІЙ (керування zOffset) ---
-
-    // 1. Миша (коліщатко)
+    // Керування (з інерцією для плавності)
     window.addEventListener('wheel', (e) => {
-        // Чутливість миші (можна підправити)
-        zOffset += e.deltaY * 2; 
+        targetZOffset += e.deltaY * 1.5;
         if (e.cancelable) e.preventDefault();
     }, { passive: false });
 
-    // 2. Смартфон (свайп)
+    let touchStartY = 0;
     window.addEventListener('touchstart', (e) => {
         touchStartY = e.touches[0].clientY;
-        isTouching = true;
-    }, { passive: false });
+    });
 
     window.addEventListener('touchmove', (e) => {
-        if (!isTouching) return;
-        const touchCurrentY = e.touches[0].clientY;
-        
-        // Різниця руху пальця
-        const deltaY = touchStartY - touchCurrentY;
-        
-        // Додаємо різницю до zOffset. *3 - це чутливість свайпу на Poco
-        zOffset += deltaY * 3; 
-
-        // Оновлюємо початкову точку для наступного кадру руху
-        touchStartY = touchCurrentY;
-
+        const touchY = e.touches[0].clientY;
+        const deltaY = touchStartY - touchY;
+        targetZOffset += deltaY * 4; // Чутливість Poco
+        touchStartY = touchY;
         if (e.cancelable) e.preventDefault();
     }, { passive: false });
 
-    window.addEventListener('touchend', () => {
-        isTouching = false;
-    });
-
-    // --- ЗАПУСК ---
-    // Ініціалізуємо render loop
     requestAnimationFrame(render);
-
 </script>
-
-<script data-goatcounter="https://flomaster.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 
 </body>
 </html>
