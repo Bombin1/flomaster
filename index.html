@@ -163,37 +163,50 @@ body {
       currentLayer = (currentLayer - 1 + totalLayers) % totalLayers;
     }
 
-    // Очищаємо попередні стани
-    layers.forEach(l => l.classList.remove('active', 'exit'));
+    // Очищаємо всі класи перед зміною
+    layers.forEach(l => {
+      l.classList.remove('active', 'exit');
+    });
 
-    // Логіка для "старого" шару
+    // Попередній шар "вилітає" (стає великим і зникає)
     layers[prevLayer].classList.add('exit');
     
-    // Логіка для "нового" шару
+    // Новий шар стає активним (наближається з глибини)
     layers[currentLayer].classList.add('active');
 
     setTimeout(() => {
       isAnimating = false;
-    }, 800); // Час має збігатися з CSS transition
+    }, 800); 
   }
 
-  // Обробка коліщатка миші
+  // 1. Блокування стандартного скролу та "дьоргання" всієї сторінки
+  window.addEventListener('touchmove', (e) => {
+    if (e.cancelable) e.preventDefault();
+  }, { passive: false });
+
+  // 2. Обробка коліщатка миші
   window.addEventListener('wheel', (e) => {
+    if (Math.abs(e.deltaY) < 10) return; // Ігноруємо надто дрібні рухи
     if (e.deltaY > 0) changeLayer('down');
     else changeLayer('up');
-  });
+  }, { passive: false });
 
-  // Обробка свайпів для Poco/мобільних
+  // 3. Обробка свайпів
   let touchStartY = 0;
   window.addEventListener('touchstart', (e) => {
     touchStartY = e.touches[0].clientY;
-  });
+  }, { passive: false });
 
   window.addEventListener('touchend', (e) => {
     let touchEndY = e.changedTouches[0].clientY;
-    if (touchStartY - touchEndY > 50) changeLayer('down');
-    if (touchEndY - touchStartY > 50) changeLayer('up');
-  });
+    let distance = touchStartY - touchEndY;
+
+    // Поріг у 80 пікселів, щоб уникнути випадкових спрацювань
+    if (Math.abs(distance) > 80) {
+      if (distance > 0) changeLayer('down');
+      else changeLayer('up');
+    }
+  }, { passive: false });
 </script>
 
 <script data-goatcounter="https://flomaster.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
