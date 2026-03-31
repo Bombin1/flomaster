@@ -171,13 +171,13 @@
                 // ВИЛІТ НА ГЛЯДАЧА
                 // Тепер блюр починається значно пізніше (після 400px), 
                 // а прозорість — основний інструмент зникнення.
-                const exitStart = 150; 
+                const exitStart = 300; 
                 if (relZ > exitStart) {
                     const factor = (relZ - exitStart) / 600;
-                    opacity = 1 - (factor * 1.5); // Швидше стає прозорим
-                    scale = 1 + factor * 2.5;
+                    opacity = 1 - (factor * 1); // Швидше стає прозорим
+                    scale = 1 + factor * 2;
                     // Блюр вмикаємо тільки в самому кінці прольоту
-                    blur = relZ > 400 ? (relZ - 400) / 10 : 0; 
+                    blur = relZ > 500 ? (relZ - 500) / 10 : 0; 
                 } else {
                     opacity = 1;
                     scale = 1;
