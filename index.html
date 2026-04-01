@@ -54,9 +54,9 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            will-change: transform, opacity, filter;
+            will-change: transform, opacity;
             backface-visibility: hidden;
-            transition: none !important; 
+            -webkit-backface-visibility: hidden;
         }
 
         .container {
@@ -101,16 +101,15 @@
             transition: background 0.3s;
         }
 
-        .button:active {
-            background: rgba(255,255,255,0.3);
-        }
-
         .webp-content {
             width: auto;
             height: auto;
             max-width: 90vw;
             max-height: 80vh;
             object-fit: contain;
+            /* Апаратне прискорення для Poco */
+            transform: translateZ(0);
+            will-change: transform, opacity;
         }
     </style>
 </head>
@@ -146,7 +145,7 @@
     const layers = document.querySelectorAll('.layer');
     const totalLayers = layers.length;
     
-    const zSpacing = -1000; // Велика відстань для чіткості
+    const zSpacing = -1000; 
     const loopDistance = totalLayers * Math.abs(zSpacing);
     
     let targetZ = 0;
@@ -165,62 +164,75 @@
 
             let opacity = 0;
             let scale = 1;
-            let blur = 0;
+            let blurVal = 0;
 
             if (relZ > 0) {
-                // ВИЛІТ НА ГЛЯДАЧА
-                // Тепер блюр починається значно пізніше (після 400px), 
-                // а прозорість — основний інструмент зникнення.
-                const exitStart = 100; 
+                // ВИЛІТ (Оптимізовано: швидше зникнення для уникнення лагу)
+                const exitStart = 50; 
                 if (relZ > exitStart) {
-                    const factor = (relZ - exitStart) / 600;
-                    opacity = 1 - (factor * 0.8); // Швидше стає прозорим
-                    scale = 1 + factor * 3;
-                    // Блюр вмикаємо тільки в самому кінці прольоту
-                    blur = 0; //relZ > 400 ? (relZ - 400) / 15 : 0; 
+                    const factor = (relZ - exitStart) / 500;
+                    opacity = 1 - (factor * 1.2); 
+                    scale = 1 + factor * 2.5;
                 } else {
                     opacity = 1;
                     scale = 1;
-                    blur = 0;
                 }
             } else {
-                // ПОЯВА З ГЛИБИНИ
-                // Робимо появу м'якшою через прозорість без сильного блюру на вході
-                const entryStart = -1000;
+                // ПОЯВА
+                const entryStart = -1200;
                 if (relZ > entryStart) {
                     const factor = 1 - (relZ / entryStart);
                     opacity = factor;
-                    // Мінімальний блюр тільки для зовсім далеких об'єктів
-                    blur = relZ < -600 ? Math.abs(relZ + 600) / 40 : 0;
+                    blurVal = relZ < -700 ? Math.abs(relZ + 700) / 50 : 0;
                 } else {
                     opacity = 0;
                 }
             }
 
+            // РАДИКАЛЬНА ОПТИМІЗАЦІЯ ДЛЯ ТИТУЛКИ (Index 0)
+            if (index === 0) {
+                // Жорстко відсікаємо, коли Layer 1 вже на підході
+                if (relZ > 250) opacity = 0;
+
+                const buttons = layer.querySelectorAll('.button');
+                const isStationary = relZ > -25 && relZ < 25;
+                
+                buttons.forEach(btn => {
+                    const currentFilter = isStationary ? 'blur(10px)' : 'none';
+                    if (btn.style.backdropFilter !== currentFilter) {
+                        btn.style.backdropFilter = currentFilter;
+                        btn.style.webkitBackdropFilter = currentFilter;
+                    }
+                });
+                layer.style.pointerEvents = (relZ > -400 && relZ < 200) ? 'all' : 'none';
+            }
+
+            // Застосування стилів
             layer.style.transform = `translate3d(0, 0, ${relZ}px) scale(${scale})`;
             layer.style.opacity = Math.max(0, Math.min(1, opacity));
-            layer.style.filter = `blur(${blur}px)`;
-
-            if (index === 0) {
-                const isClickable = relZ > -400 && relZ < 250;
-                layer.style.pointerEvents = isClickable ? 'all' : 'none';
+            
+            // Оптимізація рендеру: вимикаємо шари, яких не видно
+            if (opacity <= 0) {
+                layer.style.display = 'none';
+                layer.style.visibility = 'hidden';
+            } else {
+                layer.style.display = 'flex';
+                layer.style.visibility = 'visible';
+                layer.style.filter = blurVal > 0.5 ? `blur(${blurVal}px)` : 'none';
             }
         });
 
         requestAnimationFrame(render);
     }
 
-    // Обробка скролу з "Магнітним ефектом"
+    // Магнітний скрол
     window.addEventListener('wheel', (e) => {
         let delta = e.deltaY;
-        
-        // Магніт: якщо ми біля центру шару, скрол іде тугіше
         layers.forEach((_, index) => {
             let layerZ = index * zSpacing;
             let relZ = (layerZ + (targetZ % loopDistance + loopDistance) % loopDistance);
             if (Math.abs(relZ) < 150) delta *= 0.4; 
         });
-
         targetZ += delta * 1.2;
         if (e.cancelable) e.preventDefault();
     }, { passive: false });
@@ -232,14 +244,11 @@
 
     window.addEventListener('touchmove', (e) => {
         let deltaY = lastY - e.touches[0].clientY;
-        
-        // Магніт для тач-скрину (наприклад, для Poco X6 Pro)
         layers.forEach((_, index) => {
             let layerZ = index * zSpacing;
             let relZ = (layerZ + (targetZ % loopDistance + loopDistance) % loopDistance);
             if (Math.abs(relZ) < 100) deltaY *= 0.5;
         });
-
         targetZ += deltaY * 3.5;
         lastY = e.touches[0].clientY;
         if (e.cancelable) e.preventDefault();
