@@ -99,6 +99,7 @@
             font-weight: 500;
             display: block;
             transition: background 0.3s;
+            will-change: transform, backdrop-filter;
         }
 
         .button:active {
@@ -160,6 +161,7 @@
             let layerZ = index * zSpacing;
             let relZ = layerZ + loopOffset;
 
+            // Логіка нескінченності
             if (relZ > 800) relZ -= loopDistance;
             else if (relZ < (zSpacing * (totalLayers - 0.5))) relZ += loopDistance;
 
@@ -169,15 +171,12 @@
 
             if (relZ > 0) {
                 // ВИЛІТ НА ГЛЯДАЧА
-                // Тепер блюр починається значно пізніше (після 400px), 
-                // а прозорість — основний інструмент зникнення.
                 const exitStart = 100; 
                 if (relZ > exitStart) {
                     const factor = (relZ - exitStart) / 600;
-                    opacity = 1 - (factor * 0.8); // Швидше стає прозорим
+                    opacity = 1 - (factor * 0.8); 
                     scale = 1 + factor * 3;
-                    // Блюр вмикаємо тільки в самому кінці прольоту
-                    blur = 0; //relZ > 400 ? (relZ - 400) / 15 : 0; 
+                    blur = 0; 
                 } else {
                     opacity = 1;
                     scale = 1;
@@ -185,26 +184,35 @@
                 }
             } else {
                 // ПОЯВА З ГЛИБИНИ
-                // Робимо появу м'якшою через прозорість без сильного блюру на вході
                 const entryStart = -1000;
                 if (relZ > entryStart) {
                     const factor = 1 - (relZ / entryStart);
                     opacity = factor;
-                    // Мінімальний блюр тільки для зовсім далеких об'єктів
                     blur = relZ < -600 ? Math.abs(relZ + 600) / 40 : 0;
                 } else {
                     opacity = 0;
                 }
             }
 
-            layer.style.transform = `translate3d(0, 0, ${relZ}px) scale(${scale})`;
-            layer.style.opacity = Math.max(0, Math.min(1, opacity));
-            layer.style.filter = `blur(${blur}px)`;
-
+            // --- НОВА УМОВА: Оптимізація лагу титулки (Layer 0) ---
             if (index === 0) {
+                const buttons = layer.querySelectorAll('.button');
+                // Якщо титулка відлетіла від центру на 50px, прибираємо важкий блюр кнопок
+                const needsBlur = relZ <= 50 && relZ >= -50;
+                buttons.forEach(btn => {
+                    btn.style.backdropFilter = needsBlur ? 'blur(10px)' : 'none';
+                    btn.style.webkitBackdropFilter = needsBlur ? 'blur(10px)' : 'none';
+                });
+
+                // Керування кліками
                 const isClickable = relZ > -400 && relZ < 250;
                 layer.style.pointerEvents = isClickable ? 'all' : 'none';
             }
+
+            // Рендер трансформацій
+            layer.style.transform = `translate3d(0, 0, ${relZ}px) scale(${scale})`;
+            layer.style.opacity = Math.max(0, Math.min(1, opacity));
+            layer.style.filter = `blur(${blur}px)`;
         });
 
         requestAnimationFrame(render);
@@ -214,7 +222,6 @@
     window.addEventListener('wheel', (e) => {
         let delta = e.deltaY;
         
-        // Магніт: якщо ми біля центру шару, скрол іде тугіше
         layers.forEach((_, index) => {
             let layerZ = index * zSpacing;
             let relZ = (layerZ + (targetZ % loopDistance + loopDistance) % loopDistance);
@@ -233,7 +240,6 @@
     window.addEventListener('touchmove', (e) => {
         let deltaY = lastY - e.touches[0].clientY;
         
-        // Магніт для тач-скрину (наприклад, для Poco X6 Pro)
         layers.forEach((_, index) => {
             let layerZ = index * zSpacing;
             let relZ = (layerZ + (targetZ % loopDistance + loopDistance) % loopDistance);
