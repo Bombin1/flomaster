@@ -146,104 +146,91 @@
     const layers = document.querySelectorAll('.layer');
     const totalLayers = layers.length;
     
-    const zSpacing = -1000; // Велика відстань для чіткості
+    const zSpacing = -1400; 
     const loopDistance = totalLayers * Math.abs(zSpacing);
     
     let targetZ = 0;
     let currentZ = 0;
+    const lerpFactor = 0.07; 
 
     function render() {
-        currentZ += (targetZ - currentZ) * 0.08;
+        // Плавний рух
+        currentZ += (targetZ - currentZ) * lerpFactor;
         const loopOffset = (currentZ % loopDistance + loopDistance) % loopDistance;
 
         layers.forEach((layer, index) => {
             let layerZ = index * zSpacing;
             let relZ = layerZ + loopOffset;
 
-            if (relZ > 800) relZ -= loopDistance;
+            // Логіка нескінченності (стрибок у темряві)
+            if (relZ > 1000) relZ -= loopDistance;
             else if (relZ < (zSpacing * (totalLayers - 0.5))) relZ += loopDistance;
 
             let opacity = 0;
             let scale = 1;
-            let blur = 0;
 
             if (relZ > 0) {
                 // ВИЛІТ НА ГЛЯДАЧА
-                // Тепер блюр починається значно пізніше (після 400px), 
-                // а прозорість — основний інструмент зникнення.
-                const exitStart = 100; 
-                if (relZ > exitStart) {
-                    const factor = (relZ - exitStart) / 600;
-                    opacity = 1 - (factor * 0.8); // Швидше стає прозорим
-                    scale = 1 + factor * 3;
-                    // Блюр вмикаємо тільки в самому кінці прольоту
-                    blur = 0; //relZ > 400 ? (relZ - 400) / 15 : 0; 
-                } else {
-                    opacity = 1;
-                    scale = 1;
-                    blur = 0;
-                }
+                const factor = relZ / 800; 
+                opacity = 1 - factor; 
+                scale = 1 + factor * 3;
             } else {
                 // ПОЯВА З ГЛИБИНИ
-                // Робимо появу м'якшою через прозорість без сильного блюру на вході
-                const entryStart = -1000;
-                if (relZ > entryStart) {
-                    const factor = 1 - (relZ / entryStart);
-                    opacity = factor;
-                    // Мінімальний блюр тільки для зовсім далеких об'єктів
-                    blur = relZ < -600 ? Math.abs(relZ + 600) / 40 : 0;
-                } else {
-                    opacity = 0;
-                }
+                const factor = 1 - (relZ / -1200);
+                opacity = factor;
+                scale = 1 + (relZ / 5000);
             }
 
-            layer.style.transform = `translate3d(0, 0, ${relZ}px) scale(${scale})`;
-            layer.style.opacity = Math.max(0, Math.min(1, opacity));
-            layer.style.filter = `blur(${blur}px)`;
+            // ОПТИМІЗАЦІЯ ДЛЯ GOOGLE PIXEL
+            if (opacity <= 0.01) {
+                layer.style.visibility = 'hidden';
+            } else {
+                layer.style.visibility = 'visible';
+                layer.style.opacity = Math.max(0, Math.min(1, opacity));
+                layer.style.transform = `translate3d(0, 0, ${relZ}px) scale(${Math.max(0, scale)})`;
+            }
 
+            // Кліки (тільки для Тітулки)
             if (index === 0) {
                 const isClickable = relZ > -400 && relZ < 250;
                 layer.style.pointerEvents = isClickable ? 'all' : 'none';
+            } else {
+                layer.style.pointerEvents = 'none';
             }
         });
 
         requestAnimationFrame(render);
     }
 
-    // Обробка скролу з "Магнітним ефектом"
+    // ЛЕГКІ ПОДІЇ СКРОЛУ
     window.addEventListener('wheel', (e) => {
         let delta = e.deltaY;
         
-        // Магніт: якщо ми біля центру шару, скрол іде тугіше
-        layers.forEach((_, index) => {
-            let layerZ = index * zSpacing;
-            let relZ = (layerZ + (targetZ % loopDistance + loopDistance) % loopDistance);
-            if (Math.abs(relZ) < 150) delta *= 0.4; 
+        // Спрощений "магніт" (опір біля центру)
+        const currentPos = (currentZ % loopDistance + loopDistance) % loopDistance;
+        layers.forEach((_, i) => {
+            let z = (i * zSpacing + currentPos) % loopDistance;
+            if (Math.abs(z) < 150) delta *= 0.5; 
         });
 
         targetZ += delta * 1.2;
-        if (e.cancelable) e.preventDefault();
-    }, { passive: false });
+    }, { passive: true });
 
     let lastY = 0;
     window.addEventListener('touchstart', (e) => {
         lastY = e.touches[0].clientY;
-    });
+    }, { passive: true });
 
     window.addEventListener('touchmove', (e) => {
         let deltaY = lastY - e.touches[0].clientY;
         
-        // Магніт для тач-скрину (наприклад, для Poco X6 Pro)
-        layers.forEach((_, index) => {
-            let layerZ = index * zSpacing;
-            let relZ = (layerZ + (targetZ % loopDistance + loopDistance) % loopDistance);
-            if (Math.abs(relZ) < 100) deltaY *= 0.5;
-        });
+        // Опір для тач-скрину
+        const currentPos = (currentZ % loopDistance + loopDistance) % loopDistance;
+        if (Math.abs(currentPos % Math.abs(zSpacing)) < 150) deltaY *= 0.6;
 
         targetZ += deltaY * 3.5;
         lastY = e.touches[0].clientY;
-        if (e.cancelable) e.preventDefault();
-    }, { passive: false });
+    }, { passive: true });
 
     requestAnimationFrame(render);
 </script>
