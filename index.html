@@ -170,7 +170,7 @@
                 // ВИЛІТ (Оптимізовано: швидше зникнення для уникнення лагу)
                 const exitStart = 100; 
                 if (relZ > exitStart) {
-                    const factor = (relZ - exitStart) / 700;
+                    const factor = (relZ - exitStart) / 900;
                     opacity = 1 - (factor * 1.2); 
                     scale = 1 + factor * 2.5;
                 } else {
