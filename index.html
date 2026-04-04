@@ -168,10 +168,10 @@
 
             if (relZ > 0) {
                 // ВИЛІТ (Оптимізовано: швидше зникнення для уникнення лагу)
-                const exitStart = 50; 
+                const exitStart = 100; 
                 if (relZ > exitStart) {
-                    const factor = (relZ - exitStart) / 500;
-                    opacity = 1 - (factor * 1.1); 
+                    const factor = (relZ - exitStart) / 600;
+                    opacity = 1 - (factor * 1.3); 
                     scale = 1 + factor * 2.5;
                 } else {
                     opacity = 1;
